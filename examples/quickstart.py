@@ -26,7 +26,7 @@ def getForecast(request):
 
     loc = first_entity_value(entities, 'location')
     if loc:
-        context['forecast'] = 'sunny'
+        context['forecast'] = 'sunny in ' + loc
         if context.get('missingLocation') is not None:
             del context['missingLocation']
     else:
@@ -38,7 +38,7 @@ def getForecast(request):
 
 actions = {
     'send': send,
-    'getForecast': get_forecast,
+    'getForecast': getForecast,
 }
 
 client = Wit(access_token=access_token, actions=actions)
