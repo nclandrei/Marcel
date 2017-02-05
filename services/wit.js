@@ -78,7 +78,6 @@ var actions = {
 
 	// list of functions Wit.ai can execute
     ['fetch-weather'](sessionId, context, cb) {
-        Here we can place an API call to a weather service
             if (context.loc) {
                 getWeather(context.loc)
                     .then(function (forecast) {
