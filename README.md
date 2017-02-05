@@ -1,166 +1,199 @@
-# pywit
+# 🤖 Add Wit.ai to Your Facebook Messenger bot
 
-`pywit` is the Python SDK for [Wit.ai](http://wit.ai).
+![Alt text](/demo/Demo.gif)
 
-## Install
+Facebook Messenger is a platform that reaches over a billion people world wide. Now that Facebook has opened up access to sending and receiving messages many new opportunities open up.
 
-Using `pip`:
-```bash
-pip install wit
-```
+You can jack up your chat bot’s smarts with two tech buzzwords: natural language processing (NLP) and natural language understanding (NLU). Those two things can make your chat bot not awkwardly ask you again and again what someone just said.
 
-From source:
-```bash
-git clone https://github.com/wit-ai/pywit
-python setup.py install
-```
+You can read the [5 min quickstart](https://wit.ai/docs/quickstart) the Wit.ai team prepared but it's really only meant for beginners and not for intermediate hackers.
 
-## Usage
+So instead here is how to add Wit.ai to do real things in 30 minutes.
 
-See the `examples` folder for examples.
+## 🤔 Firstly, what’s the difference between NLP and NLU?
 
-## API
+NLP helps you break down a sentence into things called entities. It’s like primary school for your bot. For example, NLP can read the sentence “Sally sold seashells by the seashore” and figure out there’s an entity Sally, that there’s another entity sold, that there are entities seashells and seashore.
 
-### Versioning
+Sometimes just having words in a sentence is enough. You can extract category or keywords and from there you can hack your chat bot to do something. But for more smarts you need to take your bot to the equivalent of university.
+NLU helps you figure out what that sentence meant. Sally did something with something. And because of that the chat bot can then react and respond based on what Sally did do and with what. In other words, with NLU your chat bot can figure out human concepts like intent or sentiment.
 
-The default API version is `20160516`.
-You can target a specific version by setting the env variable `WIT_API_VERSION`.
+## 🏃 Get ready!
 
-### Overview
+If you have not built a chat bot before then read my other tutorial first: [http://github.com/jw84/messenger-bot-tutorial](http://github.com/jw84/messenger-bot-tutorial)
 
-`pywit` provides a Wit class with the following methods:
-* `message` - the Wit [message API](https://wit.ai/docs/http/20160330#get-intent-via-text-link)
-* `speech` - the Wit [speech API](https://wit.ai/docs/http/20160526#post--speech-link)
-* `converse` - the low-level Wit [converse API](https://wit.ai/docs/http/20160330#converse-link)
-* `run_actions` - a higher-level method to the Wit converse API
-* `interactive` - starts an interactive conversation with your bot
+Be sure you know how to deploy a Heroku server. You can then git clone this repository, running npm install, and get started.
 
-### Wit class
+### *Setup Wit.ai*
 
-The Wit constructor takes the following parameters:
-* `access_token` - the access token of your Wit instance
-* `actions` - (optional if you only use `message()`) the dictionary with your actions
+1. Sign up for a Wit.ai account here: https://wit.ai
 
-`actions` has action names as keys and action implementations as values.
+2. Go clone my weather app: [https://wit.ai/jw84/weather](https://wit.ai/jw84/weather)
 
-A minimal example looks like this:
+3. Find the app token in your weather app so we can test everything is working. In your app go to the Settings page then find the “Server Access Token” in API Details.
 
-```python
-from wit import Wit
+![Alt text](/demo/Demo1.jpg)
 
-def send(request, response):
-    print('Sending to user...', response['text'])
-def my_action(request):
-    print('Received from user...', request['text'])
+Let’s test first that the token works by running this command in your Terminal:
 
-actions = {
-    'send': send,
-    'my_action': my_action,
-}
+	curl -H 'Authorization: Bearer <YOUR TOKEN HERE>' 'https://api.wit.ai/message?v=20160526&q=what%20is%20the%20weather%20in%20New%20York'
 
-client = Wit(access_token=access_token, actions=actions)
-```
+You should get back a response like:
 
-### .message()
+	{
+	  "msg_id" : "14735f29-daa9-4553-a259-24cfa8c4ba42",
+	  "_text" : "what is the weather in New York",
+		"entities": {
+			"location": [ {
+				"confidence": 0.9984463453705885,
+				"type": "value",
+				"value": "New York",
+				"suggested": true
+			} ]
+		}
+	}
 
-The Wit [message API](https://wit.ai/docs/http/20160330#get-intent-via-text-link).
+Great success! ✨
 
-Takes the following parameters:
-* `msg` - the text you want Wit.ai to extract the information from
-* `verbose` - (optional) if set, calls the API with `verbose=true`
+### *Deploy the chat bot to the clouds*
 
-Example:
-```python
-resp = client.message('what is the weather in London?')
-print('Yay, got Wit.ai response: ' + str(resp))
-```
+1. Git clone my bot here
 
-### .speech()
+2. I have organized my chat bot into four major components: the server, the Facebook Messenger connector, the bot app, and the NLP service. It’s a good idea to make chat bots modular. You can progressively add more more components to make the bot understand language or locations but you should also be able to remove components and until only a web server is left.
 
-The Wit [speech API](https://wit.ai/docs/http/20160526#post--speech-link).
+3. Deploy the bot to Heroku by running these command in Terminal inside the cloned git repo directory. A page should pop up meaning your app is ready. Be sure to remember the URL of your Heroku app.
 
-Takes the following parameters:
-* `audio_file` - a file handler opened in binary mode
-* `verbose` - (optional) if set, calls the API with `verbose=true`
-* `headers` - (optional) the dict of headers (e.g. "Content-Type")
+	```
+	heroku apps:create
+	git push heroku master
+	heroku open
+	```
 
-Example:
-```python
-resp = None
-with open('test.wav', 'rb') as f:
-  resp = client.speech(f, None, {'Content-Type': 'audio/wav'})
-print('Yay, got Wit.ai response: ' + str(resp))
-```
+Setup Facebook to talk to your chat bot
 
-### .run_actions()
+1. Go to [https://developers.facebook.com](https://developers.facebook.com) and create a new app, be sure to add Facebook Messenger as a product to the app. You can also use an existing an app.
 
-A higher-level method to the Wit converse API.
-`run_actions` resets the last turn on new messages and errors.
+2. Go to the settings page of the app you’ve made then go to the Messenger settings page. Here you will generate a token of the Facebook Page to link to with Messenger. Remember to save this token key somewhere.
 
-Takes the following parameters:
-* `session_id` - a unique identifier describing the user session
-* `message` - the text received from the user
-* `context` - the dict representing the session state
-* `max_steps` - (optional) the maximum number of actions to execute (defaults to 5)
-* `verbose` - (optional) if set, calls the API with `verbose=true`
+![Alt text](/demo/Demo2.jpg)
 
-Example:
-```python
-session_id = 'my-user-session-42'
-context0 = {}
-context1 = client.run_actions(session_id, 'what is the weather in London?', context0)
-print('The session state is now: ' + str(context1))
-context2 = client.run_actions(session_id, 'and in Brussels?', context1)
-print('The session state is now: ' + str(context2))
-```
+3. Set up Webhooks to your FB app. Remember to use the link to your own Heroku app.
 
-### .converse()
+![Alt text](/demo/Demo3.jpg)
+![Alt text](/demo/Demo4.jpg)
 
-The low-level Wit [converse API](https://wit.ai/docs/http/20160330#converse-link).
+Click Verify and Save. You should see the Complete sign!
 
-Takes the following parameters:
-* `session_id` - a unique identifier describing the user session
-* `message` - the text received from the user
-* `context` - the dict representing the session state
-* `reset` - (optional) whether to reset the last turn
-* `verbose` - (optional) if set, sets the API parameter `verbose` to `true`
+4. Now we’ll set up the server again. Set the keys required as environment variables to make the bot work by running these commands in Terminal:
 
-Example:
-```python
-resp = client.converse('my-user-session-42', 'what is the weather in London?', {})
-print('Yay, got Wit.ai response: ' + str(resp))
-```
+	```
+	heroku config:set WIT_TOKEN='your_token_here'
+	heroku config:set FB_PAGE_TOKEN='your_token_here'
+	```
 
-See the [docs](https://wit.ai/docs) for more information.
+When that’s done you should be able to at least say hi to your chat bot and have it echo back hi! 🤖
 
-### .interactive()
 
-Starts an interactive conversation with your bot.
+### *Create stories in Wit.ai*
 
-Example:
-```python
-client.interactive()
-```
+Wit.ai does the hard work for you by creating a simple to use interface to manage what are called “stories” — these are ways to extract meaning from a keyword or sentence.
 
-See the [docs](https://wit.ai/docs) for more information.
+![Alt text](/demo/Demo5.jpg)
 
-### Logging
+For now you might have to write a lot of stories for your chat bot to understand language but soon Wit.ai has a vision that we can share hundreds of stories with each other. And with more stories the more skills your chat bot will have.
 
-Default logging is to `STDOUT` with `INFO` level.
 
-You can set your logging level as follows:
-``` python
-from wit import Wit
-import logging
-client = Wit(token, actions)
-client.logger.setLevel(logging.WARNING)
-```
+## 🎓 Time to teach your bot!
 
-You can also specify a custom logger object in the Wit constructor:
-``` python
-from wit import Wit
-client = Wit(access_token=access_token, actions=actions, logger=custom_logger)
-```
+### *Extract location out of conversations*
 
-See the [logging module](https://docs.python.org/2/library/logging.html) and
-[logging.config](https://docs.python.org/2/library/logging.config.html#module-logging.config) docs for more information.
+1. Create a new story in the Wit dashboard. The first type of story we’ll write is extracting location from conversations. This way we can build a weather bot! Go here [https://wit.ai/jw84/weather/stories](https://wit.ai/jw84/weather/stories) to see the recipe I’ve created.
+
+![Alt text](/demo/Demo6.jpg)
+
+2. Find the Read function in the bot.js file. Here the bot can recognize messages. The first message can be hello, the chat bot can send back an introduction. Otherwise, we can pass the message on to Wit.ai for processing.
+
+![Alt text](/demo/Demo7.jpg)
+
+3. Let’s test and see if the weather shows up!
+
+![Alt text](/demo/Demo8.gif)
+
+### *Extract category and sentiment out of conversations*
+
+1. Create yet another Wit app in the dashboard. This new app will have three stories to extract the category and sentiment entities out of a conversation so your chat bot can reply with some cute pics! Go here [https://wit.ai/jw84/cutepics/stories](https://wit.ai/jw84/cutepics/stories) to see the recipe
+
+2. Create a new story to look for the user response then trigger the bot to execute the action and respond.
+
+![Alt text](/demo/Demo9.jpg)
+
+When you double click a word it will be highlighted as blue, after assigning the word as an entity the highlight turns purple to indicate Wit.ai has learned.
+
+Have the bot execute a merge function to extract the entity and save it to the context object. Then execute the fetch-pics action to return the actual pic itself. Thereafter you can trigger two replies by Wit.ai, one saying what the category is and the other the image link itself.
+
+3. Add and create two more stories based on my template. Each will help train Wit.ai on what to look for and how to respond to a sentiment and to an acknowledgement.
+
+![Alt text](/demo/Demo10.jpg)
+
+4. Now we can test. Be sure to update your Heroku server with the new Wit app’s token by running this command:
+
+	```
+	heroku config:set WIT_TOKEN='your_new_token_here'
+	```
+
+Let’s go back and chat it up. Ask to see some corgis. Then ask to see some racoons!
+
+![Alt text](/demo/Demo11.gif)
+
+Congratulations you’ve made a chat bot that’s smart enough to know what you’re talking about, what you mean, and reply back accordingly!
+
+## 🤓 Tell Your Chat Bot What’s What
+
+NLP and NLU are not magical! They are merely defining rules for your bot. Your chat bot will break sometimes and maybe even often when being told new and interesting conversations it’s never heard before.
+
+It is now up to you to help keep training and testing your bot until it’s the very best. You have two tools in Wit.ai to do so. Go to the console and let’s learn about the Inbox and the Understanding page.
+
+### *Training your chat bot*
+
+Wit.ai has an inbox that shows you all the messages it has received. From here you can pick and choose which one to validate and contribute to the training data of your chat bot.
+
+![Alt text](/demo/Demo12.jpg)
+
+For example, if you have an entity of location you can assign more values to help train your chat bot to know that “San Francisco” and “Timbuktu” are both locations. If you have categories for “corgis” then you can also validate that “dogs” can mean the same thing.
+
+The more people that talk to your chat bot and the more complex your bot is the more you will spend time in this page. And the work you do here will help make your bot even smarter.
+
+### *Testing your chat bot*
+
+The other page you will be spending time at will be in the Understanding page. Here you can try out sentences yourself to test whether your chat bot can understand and to troubleshoot when a sentence doesn’t trigger the right response.
+
+![Alt text](/demo/Demo13.jpg)
+
+## 📡 How to share your bot
+
+Learn how to get your bot approved for public use [here](https://developers.facebook.com/docs/messenger-platform/app-review).
+
+Remember, your chat bot has to be approved by Facebook so that anyone can talk to it. Otherwise, you have to go to the Roles page in your Facebook app and add testers.
+
+![Alt text](/demo/Demo14.jpg)
+
+### *Add a chat button to your webpage*
+
+Go [here](https://developers.facebook.com/docs/messenger-platform/plugin-reference) to learn how to add a chat button your page.
+
+### *Create a shortlink*
+
+You can use https://m.me/<PAGE_USERNAME> to have someone start a chat.
+
+## 💡 What's next?
+
+Read about all things chat bots with the ChatBots Magazine [here](https://medium.com/chat-bots)
+
+You can also design Messenger bots in Sketch with the [Bots UI Kit](https://bots.mockuuups.com)!
+
+## How I can help
+
+I build and design bots all day. Email me for help!
+
+## Credit
+
+Thanks to [https://github.com/hunkim/Wit-Facebook](https://github.com/hunkim/Wit-Facebook) for the inspiration
